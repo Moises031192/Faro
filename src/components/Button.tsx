@@ -18,9 +18,9 @@ const VARIANTES: Record<ButtonVariant, string> = {
 
 /** Alto, hueco entre icono y texto, y redondeo de las esquinas. */
 const TAMANOS: Record<ButtonSize, string> = {
-  sm: 'h-8 gap-1.5 rounded-lg text-sm',
-  md: 'h-10 gap-2 rounded-xl text-sm',
-  lg: 'h-12 gap-2 rounded-2xl text-base',
+  sm: 'h-8 gap-1.5 rounded-full text-sm',
+  md: 'h-10 gap-2 rounded-full text-sm',
+  lg: 'h-12 gap-2 rounded-full text-base',
 }
 
 /** Relleno lateral cuando el botón lleva texto. */
