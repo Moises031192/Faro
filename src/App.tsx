@@ -8,6 +8,7 @@ import {
   IconRobot,
   IconTarget,
 } from '@tabler/icons-react'
+import { ComponentsPreview } from './ComponentsPreview'
 
 const COLORS = [
   'red',
@@ -104,13 +105,25 @@ export default function App() {
         <p className="text-sm font-medium tracking-wide text-gray-500 uppercase">
           Faro DS
         </p>
-        <h1 className="mt-2 text-4xl font-bold text-gray-900">Tailwind</h1>
+        <h1 className="mt-2 text-4xl font-bold text-gray-900">Catálogo</h1>
         <p className="mt-3 max-w-2xl text-base text-gray-600">
-          Estos son los valores que Tailwind CSS v4 trae de serie. Todavía no
-          son los de nuestro design system: son el punto de partida sobre el que
-          lo construiremos.
+          Los primeros componentes de Faro DS y, debajo, los valores de Tailwind
+          sobre los que están construidos.
         </p>
       </header>
+
+      <ComponentsPreview />
+
+      <div className="border-t border-gray-200 pt-10">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Valores por defecto de Tailwind
+        </h2>
+        <p className="mt-2 max-w-2xl text-base text-gray-600">
+          Lo que viene a continuación no son decisiones de Faro: son los valores
+          que Tailwind CSS v4 trae de serie, el punto de partida del que iremos
+          eligiendo.
+        </p>
+      </div>
 
       <Section
         title="Paleta de color"
