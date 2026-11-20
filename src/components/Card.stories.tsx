@@ -98,7 +98,7 @@ export const ConPie: Story = {
       title="Análisis de sangre"
       description="Realizado el 2 de noviembre"
       footer={
-        <Button size="sm" variant="secondary" icon={IconDownload}>
+        <Button size="sm" variant="secondary" iconLeft={IconDownload}>
           Descargar PDF
         </Button>
       }

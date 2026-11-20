@@ -2,9 +2,13 @@ import {
   IconAlertTriangle,
   IconCalendarEvent,
   IconCheck,
+  IconChevronDown,
+  IconChevronRight,
+  IconDotsVertical,
   IconDownload,
   IconFlask,
   IconMail,
+  IconPencil,
   IconPill,
   IconPlus,
   IconSearch,
@@ -51,26 +55,51 @@ export function ComponentsPreview() {
             <Button>Guardar</Button>
             <Button variant="secondary">Cancelar</Button>
             <Button variant="ghost">Ver más</Button>
-            <Button variant="danger" icon={IconTrash}>
+            <Button variant="danger" iconLeft={IconTrash}>
               Eliminar
             </Button>
           </Fila>
           <Fila etiqueta="tamaños">
-            <Button size="sm" icon={IconPlus}>
+            <Button size="sm" iconLeft={IconPlus}>
               Pequeño
             </Button>
-            <Button size="md" icon={IconPlus}>
+            <Button size="md" iconLeft={IconPlus}>
               Mediano
             </Button>
-            <Button size="lg" icon={IconPlus}>
+            <Button size="lg" iconLeft={IconPlus}>
               Grande
             </Button>
           </Fila>
           <Fila etiqueta="iconos">
-            <Button icon={IconDownload}>Icono a la izquierda</Button>
-            <Button variant="secondary" icon={IconCalendarEvent} iconPosition="right">
-              Icono a la derecha
+            <Button iconLeft={IconDownload}>A la izquierda</Button>
+            <Button variant="secondary" iconRight={IconChevronRight}>
+              A la derecha
             </Button>
+            <Button
+              variant="secondary"
+              iconLeft={IconCalendarEvent}
+              iconRight={IconChevronDown}
+            >
+              Los dos lados
+            </Button>
+          </Fila>
+          <Fila etiqueta="solo icono">
+            <Button iconLeft={IconPlus} aria-label="Añadir medicación" />
+            <Button
+              variant="secondary"
+              iconLeft={IconPencil}
+              aria-label="Editar"
+            />
+            <Button
+              variant="ghost"
+              iconLeft={IconDotsVertical}
+              aria-label="Más opciones"
+            />
+            <Button
+              variant="danger"
+              iconLeft={IconTrash}
+              aria-label="Eliminar"
+            />
           </Fila>
           <Fila etiqueta="estados">
             <Button loading>Guardando</Button>
@@ -170,7 +199,7 @@ export function ComponentsPreview() {
             description="Realizado el 2 de noviembre"
             action={<Badge variant="warning">2 valores a revisar</Badge>}
             footer={
-              <Button size="sm" variant="secondary" icon={IconDownload}>
+              <Button size="sm" variant="secondary" iconLeft={IconDownload}>
                 Descargar PDF
               </Button>
             }
