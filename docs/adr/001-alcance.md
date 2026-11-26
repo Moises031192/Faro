@@ -84,68 +84,118 @@ no haya reglas escritas. Este ADR fija esas reglas.
 
 ### Principios
 
-Cada principio dice cómo se comprueba, para que se pueda revisar en cada PR sin
-discutir interpretaciones.
+Cada principio dice cómo se comprueba: **revisando el código** o **mirándolo en
+Storybook**. Así una PR se puede aceptar o corregir sin discutir interpretaciones.
 
 #### 1. Todo valor visual sale de un token
 
 Ningún componente ni pantalla escribe a mano un color, espaciado, radio, sombra, tamaño
-de texto o tamaño de icono. Todos salen de un token con nombre que dice su papel
-(`primary`, `danger`, `surface`, `text-muted`), no su color (`teal-600`).
+de texto, ni tamaño o grosor de icono. Los valores se definen solo en el bloque `@theme`
+de `src/index.css`, con nombres que dicen su papel (`primary`, `danger`, `surface`,
+`text-muted`) y no su color (`teal-600`). Las clases de escala de Tailwind (`gap-4`,
+`rounded-lg`, `text-sm`) están permitidas, porque leen la escala definida en `@theme`.
 
-**Cómo se comprueba:** en `src/` no aparece ninguna clase de la paleta de Tailwind
-(`teal-*`, `gray-*`, `red-*`…), ningún color hexadecimal, ningún valor entre corchetes
-(`[16px]`) ni ningún número suelto como tamaño o grosor de icono. Solo `src/index.css`
-define valores.
+**Cómo se comprueba (revisando el código).** En `src/`, salvo `src/index.css`, no aparece:
 
-#### 2. Lo que se repite es un componente
+- ninguna clase con un color de la paleta de Tailwind (`teal-600`, `gray-200`, `red-50`…),
+  ni `white` ni `black`;
+- ningún color escrito como hexadecimal, `rgb()` o `hsl()`;
+- ningún valor entre corchetes (`p-[18px]`, `text-[#333]`);
+- ningún número suelto en las props `size` o `stroke` de un icono de Tabler. Esos valores
+  salen de una constante compartida de tamaños de icono.
 
-Si una pantalla necesita algo que se parece a un componente, usa ese componente. Si no
-existe, se crea en `src/components/` antes de usarlo; no se imita con clases sueltas.
+#### 2. Las pantallas colocan; los componentes pintan
 
-**Cómo se comprueba:** las pantallas de `src/screens/` solo usan clases de Tailwind para
-colocar elementos (`flex`, `gap-*`, `grid`, anchos máximos). No contienen clases de
-color, borde, radio, sombra ni tipografía.
+Una pantalla solo decide dónde va cada componente. Todo lo que da aspecto (color, borde,
+radio, sombra, tipografía) vive en un componente de `src/components/`. Si una pantalla
+necesita un aspecto que ningún componente ofrece, primero se crea o se amplía el
+componente.
+
+**Cómo se comprueba (revisando el código).** En `src/screens/` no hay atributos `style`,
+y solo se usan clases de colocación:
+
+- disposición: `flex`, `grid`, `gap-*`, `space-*`, `items-*`, `justify-*`, `self-*`,
+  `order-*`, `col-*`, `row-*`;
+- medidas y márgenes: `p*-*`, `m*-*`, `w-*`, `h-*`, `size-*`, `min-*`, `max-*`;
+- posición: `relative`, `absolute`, `sticky`, `fixed`, `inset-*`, `top-*`, `bottom-*`,
+  `left-*`, `right-*`, `z-*`;
+- visibilidad: `hidden`, `block`, `overflow-*`, `sr-only`.
+
+Cualquier otra clase en una pantalla incumple el principio.
 
 #### 3. Accesible por defecto
 
-Todo cumple WCAG 2.2 AA (la norma internacional de accesibilidad web, nivel intermedio)
-en modo claro y en modo oscuro.
+La referencia es WCAG 2.2 AA (la norma internacional de accesibilidad web, nivel
+intermedio). Como la norma entera no se puede revisar a mano en cada PR, el principio
+se concreta en estas comprobaciones, que se hacen en **modo claro y en modo oscuro**.
 
-**Cómo se comprueba:**
+**Cómo se comprueba (mirándolo en Storybook), en cada historia:**
 
-- El panel de accesibilidad de Storybook no muestra errores en ninguna historia.
-- El texto tiene un contraste de al menos 4,5:1 con su fondo, y los bordes e iconos con
-  significado, de al menos 3:1.
-- Todo lo pulsable se alcanza con el tabulador, responde a Enter (y a Espacio si es un
-  botón) y muestra el foco con `focus-visible`.
-- Las zonas pulsables miden al menos 24 × 24 px.
-- Un control sin texto visible no compila sin `aria-label`, como ya ocurre en `Button`.
+- El panel de accesibilidad (*Accessibility*) no muestra infracciones. Ese panel revisa,
+  entre otras cosas, que el texto tenga un contraste de al menos 4,5:1 con su fondo.
+- Al recorrerla con el tabulador se llega a todo lo pulsable, en un orden lógico y con
+  el foco visible. Enter activa el elemento, y Espacio también si es un botón.
+- Al hacer clic con el ratón **no** aparece el anillo de foco: solo se muestra al
+  navegar con el teclado.
+- Con la herramienta de medir de Storybook, toda zona pulsable mide al menos 24 × 24 px.
+
+**Y revisando el código:** un control sin texto visible no compila sin `aria-label`,
+como ya ocurre en `Button`.
 
 #### 4. Un mismo concepto, un mismo nombre
 
-Si dos componentes tienen la misma idea, la prop se llama igual, acepta los mismos
-valores y tiene el mismo valor por defecto.
+Las props que se repiten entre componentes se llaman igual, aceptan los mismos valores y
+tienen el mismo valor por defecto. Esta es la lista cerrada:
 
-**Cómo se comprueba:** `docs/componentes.md` incluye la lista de props compartidas
-(`variant`, `size`, `icon`, `disabled`…) con sus valores permitidos, y cada PR que
-añade o cambia un componente se revisa contra esa lista. En concreto: el icono se llama
-`icon` en todos los componentes, y los tamaños son siempre `sm`, `md` y `lg`, con `md`
-por defecto.
+| Prop | Valores | Por defecto |
+| --- | --- | --- |
+| `size` | `sm`, `md`, `lg` (o una parte de ellos) | `md` |
+| `icon` | Un componente de Tabler: `icon={IconPlus}` | — |
+| `iconEnd` | Un segundo icono al final, también como componente | — |
+| `variant` | Solo nombres de este vocabulario: `primary`, `secondary`, `ghost`, `neutral`, `info`, `success`, `warning`, `danger` | Según el componente |
+| `disabled` | `true` / `false` (la prop nativa) | `false` |
+| `label`, `hint`, `error` | Texto. En todo campo de formulario: etiqueta, ayuda y mensaje de error | — |
+
+Para añadir una prop compartida o un valor de `variant` hace falta un nuevo ADR.
+
+**Cómo se comprueba (revisando el código).** El tipo de props de cada componente de
+`src/components/` se compara con la tabla. Incumple:
+
+- un nombre distinto para la misma idea (`leftIcon`, `helperText`, `destructive`);
+- un valor que no está en la tabla;
+- un valor por defecto distinto.
 
 #### 5. Calma en la información de salud
 
-Los colores y los iconos de alerta (`danger`, `warning`) significan siempre lo mismo:
-hay un problema que la persona debe atender. Nunca se usan para decorar, para llamar la
-atención ni para estados que no lo son. El color nunca es la única señal.
+Cada variante de estado tiene un significado fijo y se usa solo para eso:
+
+| Variante | Significa | Ejemplos en Faro |
+| --- | --- | --- |
+| `success` | Algo ha terminado bien, o un valor está dentro de su rango | Cita confirmada, análisis en rango |
+| `info` | Un dato neutro que no pide ninguna acción | Hay una nota nueva de la consulta |
+| `warning` | Hay que atender algo pronto, pero no es urgente | Quedan pocas pastillas, revisión anual pendiente |
+| `danger` | Un problema que la persona debe atender, o una acción que no se puede deshacer | Valor fuera de rango, error al guardar, borrar una nota |
+
+Cualquier otro estado («Disponible», «Nuevo», «Borrador») usa `neutral`. El color nunca
+es la única señal.
 
 **Cómo se comprueba:**
 
-- Cada token de estado tiene escrito en su definición qué significa y cuándo se usa.
-- Todo elemento con color de estado tiene también un texto o un icono que diga lo mismo
-  (un `Badge danger` siempre lleva palabra; nunca hay solo un punto rojo).
-- No se usa `success`, `warning` ni `danger` para nada que no sea un resultado o un
-  aviso; para otros estados se crea una variante propia.
+- **Revisando el código:** cada uso de `variant="success"`, `"info"`, `"warning"` o
+  `"danger"` en `src/` encaja con una fila de la tabla.
+- **Mirándolo en Storybook:** toda historia con una variante de estado muestra un texto
+  (o un icono con `aria-label`) que dice lo mismo que el color. Con el simulador de
+  visión de Storybook en escala de grises, se entiende igual.
+
+### Resumen: cómo se comprueba cada principio
+
+| Principio | Qué se comprueba | Dónde |
+| --- | --- | --- |
+| 1. Todo valor visual sale de un token | No hay colores de la paleta, `white`/`black`, hexadecimales, valores entre corchetes ni números sueltos en los iconos fuera de `src/index.css` | Revisando el código |
+| 2. Las pantallas colocan; los componentes pintan | En `src/screens/` solo hay clases de la lista de colocación y ningún `style` | Revisando el código |
+| 3. Accesible por defecto | Panel de accesibilidad sin infracciones, recorrido con teclado, foco solo con teclado y zonas de 24 × 24 px, en modo claro y oscuro | Mirándolo en Storybook (y `aria-label` obligatorio, revisando el código) |
+| 4. Un mismo concepto, un mismo nombre | Las props de cada componente coinciden en nombre, valores y valor por defecto con la tabla del principio | Revisando el código |
+| 5. Calma en la información de salud | Cada variante de estado se usa con su significado de la tabla y siempre va con texto | Revisando el código y mirándolo en Storybook |
 
 ---
 
@@ -166,9 +216,12 @@ atención ni para estados que no lo son. El color nunca es la única señal.
 
 - **Rehacer lo que ya existe.** Los cuatro componentes y `src/screens/antes.tsx`
   incumplen hoy los principios 1, 2 y 4. Hay que crear la capa de tokens y adaptarlos.
-- **Un cambio que rompe el uso actual de `Button`.** Unificar el nombre del icono obliga
-  a sustituir `iconLeft`/`iconRight` por `icon` (más una forma de indicar el icono
-  derecho) y a actualizar cada sitio donde se usa.
+- **Cambios que rompen el uso actual de algunos componentes.** El principio 4 obliga a
+  sustituir en `Button` `iconLeft` por `icon` e `iconRight` por `iconEnd`, y a poner
+  `md` como tamaño por defecto de `Badge` (hoy es `sm`). Hay que actualizar cada sitio
+  donde se usan.
+- **La pantalla del asistente incumple el principio 5:** «Disponible» usa
+  `Badge variant="success"` y tiene que pasar a `neutral`.
 - **Más componentes antes de más pantallas.** La burbuja del chat, la barra inferior y
   una escala de titulares tienen que existir como componentes antes de seguir montando
   pantallas.
@@ -181,11 +234,14 @@ atención ni para estados que no lo son. El color nunca es la única señal.
 
 1. Crear la capa de tokens en `src/index.css` (color con modo claro y oscuro,
    espaciado, radios, sombras, tipografía y tamaños de icono).
-2. Pasar los cuatro componentes a tokens y unificar la prop del icono.
-3. Crear los componentes que faltan para la pantalla del asistente y rehacer
+2. Pasar los cuatro componentes a tokens, con una constante compartida para los
+   tamaños de icono, y adaptarlos a la tabla de props del principio 4.
+3. Añadir a Storybook un selector de modo claro y oscuro, para poder hacer las
+   comprobaciones del principio 3 en los dos modos.
+4. Crear los componentes que faltan para la pantalla del asistente y rehacer
    `src/screens/antes.tsx` con ellos.
-4. Añadir a `docs/componentes.md` las columnas que reflejen estos principios.
-5. Actualizar el `README.md`, que sigue describiendo un repositorio sin código.
+5. Añadir a `docs/componentes.md` las columnas que reflejen estos principios.
+6. Actualizar el `README.md`, que sigue describiendo un repositorio sin código.
 
 Cualquier cambio de alcance o de principios se hará con un nuevo ADR que sustituya a
 este, no editándolo.
