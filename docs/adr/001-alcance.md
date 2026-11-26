@@ -1,6 +1,6 @@
 # ADR-001 · Alcance y principios
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado · principio 2 ampliado por [ADR-002](002-pantallas-solo-faro-ds.md)
 - **Fecha:** 2026-11-26
 - **Autor:** Moisés ([@Moises031192](https://github.com/Moises031192))
 
