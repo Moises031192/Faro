@@ -1,6 +1,6 @@
 # ADR-001 · Alcance y principios
 
-- **Estado:** Aceptado · principio 2 ampliado por [ADR-002](002-pantallas-solo-faro-ds.md)
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-26
 - **Autor:** Moisés ([@Moises031192](https://github.com/Moises031192))
 
@@ -104,24 +104,69 @@ de `src/index.css`, con nombres que dicen su papel (`primary`, `danger`, `surfac
 - ningún número suelto en las props `size` o `stroke` de un icono de Tabler. Esos valores
   salen de una constante compartida de tamaños de icono.
 
-#### 2. Las pantallas colocan; los componentes pintan
+#### 2. Las pantallas solo usan piezas de Faro DS
 
-Una pantalla solo decide dónde va cada componente. Todo lo que da aspecto (color, borde,
-radio, sombra, tipografía) vive en un componente de `src/components/`. Si una pantalla
-necesita un aspecto que ningún componente ofrece, primero se crea o se amplía el
-componente.
+Una pantalla de Faro se construye **solo con piezas de Faro DS**. Todo lo que la
+persona ve, lee, pulsa o rellena es un componente de `src/components/`, y todo lo que da
+aspecto (color, borde, radio, sombra, tipografía) vive dentro de esos componentes. La
+pantalla solo decide qué componentes usa, en qué orden y dónde van.
 
-**Cómo se comprueba (revisando el código).** En `src/screens/` no hay atributos `style`,
-y solo se usan clases de colocación:
+**Qué es una pantalla:** todo archivo de `src/screens/`. `App.tsx`,
+`ComponentsPreview.tsx` y `TailwindTokens.tsx` son herramientas para ver el design
+system mientras se construye, no pantallas de Faro, y quedan fuera de este principio.
 
-- disposición: `flex`, `grid`, `gap-*`, `space-*`, `items-*`, `justify-*`, `self-*`,
-  `order-*`, `col-*`, `row-*`;
-- medidas y márgenes: `p*-*`, `m*-*`, `w-*`, `h-*`, `size-*`, `min-*`, `max-*`;
-- posición: `relative`, `absolute`, `sticky`, `fixed`, `inset-*`, `top-*`, `bottom-*`,
-  `left-*`, `right-*`, `z-*`;
-- visibilidad: `hidden`, `block`, `overflow-*`, `sr-only`.
+El principio se concreta en seis reglas:
 
-Cualquier otra clase en una pantalla incumple el principio.
+1. **Solo se importa de Faro DS.** Una pantalla solo importa de:
+
+   | Origen | Para qué |
+   | --- | --- |
+   | `../components` (el índice de Faro DS) | Todas las piezas visibles |
+   | `react` | Estado y lógica (`useState`, `useEffect`…) |
+   | `@tabler/icons-react` | Iconos, **solo** para pasarlos como prop a un componente |
+   | `../lib/` | Lógica sin nada visible: cálculos, fechas, datos |
+
+   No se importa de archivos sueltos de `src/components/` (siempre del índice), ni de
+   otras pantallas, ni de ningún otro paquete.
+
+2. **Los elementos de HTML solo agrupan.** Solo se permiten `div`, `main`, `section`,
+   `article`, `aside`, `header`, `footer`, `nav`, `ul`, `ol`, `li` y `form`. Cualquier
+   otro (`h1`…`h6`, `p`, `span`, `strong`, `a`, `button`, `input`, `label`, `img`,
+   `svg`, `table`…) está prohibido: su papel lo cumple un componente de Faro DS.
+
+3. **No hay texto suelto.** Todo texto visible va dentro de un componente de Faro DS:
+   un titular en `Heading`, un párrafo en `Text`, la etiqueta de un botón en `Button`.
+   Un texto escrito directamente dentro de un elemento de la regla 2 incumple el
+   principio.
+
+4. **Los iconos van dentro de un componente.** Un icono de Tabler nunca se dibuja
+   directamente (`<IconPlus />`). Se pasa como prop (`<Button icon={IconPlus}>`), y el
+   componente decide su tamaño, su grosor y su color.
+
+5. **Solo clases de colocación, y ningún `style`.** Las únicas clases permitidas son:
+   - disposición: `flex`, `grid`, `gap-*`, `space-*`, `items-*`, `justify-*`,
+     `self-*`, `order-*`, `col-*`, `row-*`;
+   - medidas y márgenes: `p*-*`, `m*-*`, `w-*`, `h-*`, `size-*`, `min-*`, `max-*`;
+   - posición: `relative`, `absolute`, `sticky`, `fixed`, `inset-*`, `top-*`,
+     `bottom-*`, `left-*`, `right-*`, `z-*`;
+   - visibilidad: `hidden`, `block`, `overflow-*`, `sr-only`.
+
+6. **Si falta una pieza, se crea en Faro DS primero**, en la misma PR o en una
+   anterior, con su historia en Storybook (`*.stories.tsx`) y su fila en
+   `docs/componentes.md`. Una pantalla puede definir componentes internos solo para
+   **agrupar** piezas de Faro DS (como `EstadoVacio` en `antes.tsx`), y esos componentes
+   cumplen estas mismas reglas. Si el mismo agrupamiento hace falta en otra pantalla, se
+   convierte en componente de Faro DS: una pantalla nunca importa de otra.
+
+**Cómo se comprueba (revisando el código)**, en cada archivo de `src/screens/`:
+
+- cada `import` viene de uno de los cuatro orígenes de la regla 1;
+- cada etiqueta en minúsculas del JSX está en la lista de la regla 2;
+- ningún elemento de esa lista tiene texto escrito directamente dentro;
+- ningún `<Icon… />` aparece como etiqueta: los iconos solo son valor de una prop;
+- todas las clases están en la lista de la regla 5 y no hay ningún atributo `style`;
+- cada componente de `src/components/` tiene su `*.stories.tsx` y su fila en
+  `docs/componentes.md`.
 
 #### 3. Accesible por defecto
 
@@ -192,7 +237,7 @@ es la única señal.
 | Principio | Qué se comprueba | Dónde |
 | --- | --- | --- |
 | 1. Todo valor visual sale de un token | No hay colores de la paleta, `white`/`black`, hexadecimales, valores entre corchetes ni números sueltos en los iconos fuera de `src/index.css` | Revisando el código |
-| 2. Las pantallas colocan; los componentes pintan | En `src/screens/` solo hay clases de la lista de colocación y ningún `style` | Revisando el código |
+| 2. Las pantallas solo usan piezas de Faro DS | En `src/screens/` solo hay imports de Faro DS, React, Tabler y `src/lib/`; solo elementos de HTML para agrupar; nada de texto suelto ni iconos dibujados directamente; solo clases de colocación y ningún `style` | Revisando el código |
 | 3. Accesible por defecto | Panel de accesibilidad sin infracciones, recorrido con teclado, foco solo con teclado y zonas de 24 × 24 px, en modo claro y oscuro | Mirándolo en Storybook (y `aria-label` obligatorio, revisando el código) |
 | 4. Un mismo concepto, un mismo nombre | Las props de cada componente coinciden en nombre, valores y valor por defecto con la tabla del principio | Revisando el código |
 | 5. Calma en la información de salud | Cada variante de estado se usa con su significado de la tabla y siempre va con texto | Revisando el código y mirándolo en Storybook |
@@ -222,9 +267,10 @@ es la única señal.
   donde se usan.
 - **La pantalla del asistente incumple el principio 5:** «Disponible» usa
   `Badge variant="success"` y tiene que pasar a `neutral`.
-- **Más componentes antes de más pantallas.** La burbuja del chat, la barra inferior y
-  una escala de titulares tienen que existir como componentes antes de seguir montando
-  pantallas.
+- **Más componentes antes de más pantallas.** Para cumplir el principio 2 hacen falta
+  componentes básicos que hoy no existen: `Heading` (titulares), `Text` (párrafos) y
+  `Link` (enlaces). La pantalla del asistente necesita además una burbuja de mensaje y
+  una barra para escribir: hoy tiene `<h1>`, `<p>` y una burbuja hechos a mano.
 - **Doble trabajo en el diseño de cada color**, porque cada token necesita un valor
   claro y otro oscuro que cumplan los contrastes.
 - **Menos libertad puntual.** Si una pantalla necesita algo que el sistema no tiene, hay
@@ -238,10 +284,12 @@ es la única señal.
    tamaños de icono, y adaptarlos a la tabla de props del principio 4.
 3. Añadir a Storybook un selector de modo claro y oscuro, para poder hacer las
    comprobaciones del principio 3 en los dos modos.
-4. Crear los componentes que faltan para la pantalla del asistente y rehacer
-   `src/screens/antes.tsx` con ellos.
-5. Añadir a `docs/componentes.md` las columnas que reflejen estos principios.
-6. Actualizar el `README.md`, que sigue describiendo un repositorio sin código.
+4. Crear `Heading`, `Text` y `Link`, y los componentes de la conversación (burbuja de
+   mensaje y barra para escribir), con sus historias y su fila en
+   `docs/componentes.md`.
+5. Rehacer `src/screens/antes.tsx` con ellos, cumpliendo los cinco principios.
+6. Añadir a `docs/componentes.md` las columnas que reflejen estos principios.
+7. Actualizar el `README.md`, que sigue describiendo un repositorio sin código.
 
 Cualquier cambio de alcance o de principios se hará con un nuevo ADR que sustituya a
 este, no editándolo.
