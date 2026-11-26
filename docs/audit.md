@@ -1,7 +1,8 @@
 # Auditoría del design system
 
-Estado del repositorio en el commit `daa11d3`. Documento de solo lectura: describe lo
-que hay, no propone cambios.
+Documento de solo lectura: describe lo que hay, no propone cambios. Las secciones 1 a 4
+retratan los componentes en el commit `daa11d3`; la sección 5 revisa la primera pantalla
+construida con ellos, añadida en `a3e45e4`.
 
 **Punto de partida:** no existe ninguna capa de tokens. `src/index.css` es una sola
 línea (`@import 'tailwindcss' theme(static);`), sin bloque `@theme`, así que todo valor
@@ -298,3 +299,114 @@ En `src/components/Button.tsx:106-116`:
 - No hay `forwardRef` en ningún componente: no se les puede pasar una `ref`.
 - `Card` renderiza el bloque de contenido solo si hay `children` (L62); una `Card` con
   `title` y sin contenido no deja hueco vacío.
+
+---
+
+## 5. Prueba sin reglas
+
+`src/screens/antes.tsx` es la primera pantalla construida con estos componentes, escrita
+sin ninguna regla por encima: sin tokens con nombre, sin convención de nomenclatura
+escrita y sin más componentes que los cuatro existentes. Sirve como experimento: lo que
+salió mal aquí es lo que volverá a salir mal en cada pantalla nueva mientras no haya
+reglas.
+
+La pantalla **funciona y se ve bien**. El problema no es el resultado, es cómo está hecho
+por dentro.
+
+### 5.1 Valores escritos a mano
+
+La pantalla introduce **8 clases de color** nuevas, ninguna con nombre, encima de las 49
+que ya tenían los componentes:
+
+| Archivo y línea | Valor | Problema |
+| --- | --- | --- |
+| `src/screens/antes.tsx:74` | `bg-teal-600 text-white` | Es exactamente el color de `Button variant="primary"` (`Button.tsx:10`), reescrito a mano. Si mañana el acento deja de ser `teal`, esta burbuja se queda atrás |
+| `src/screens/antes.tsx:74` | `rounded-xl` | Copia el radio del contenedor de `Card` (`Card.tsx:36`). Los botones ya no usan ese radio: desde `daa11d3` son `rounded-full` |
+| `src/screens/antes.tsx:74` | `px-4 py-3` | Relleno elegido a ojo. No coincide con el de `Card` (`p-5`, `Card.tsx:44`) ni con el de ningún tamaño de `Button` |
+| `src/screens/antes.tsx:79` | `text-gray-700` | Tercer gris para texto de cuerpo. `Card` usa `text-gray-600` para su descripción (`Card.tsx:55`) e `Input` usa `text-gray-900` para el texto del campo (`Input.tsx:89`) |
+| `src/screens/antes.tsx:85-86` | `text-xs text-gray-400` | La hora del mensaje. `gray-400` existe en el sistema, pero significando otra cosa: es el gris del placeholder y del icono de `Input` (`Input.tsx:78`, `Input.tsx:90`) |
+| `src/screens/antes.tsx:106` | `text-sm text-gray-600` | Mismo papel que la descripción de `Card`, escrito otra vez en vez de reutilizado |
+| `src/screens/antes.tsx:154` | `text-2xl font-bold text-gray-900` | **Ningún componente usa `text-2xl`.** Los cuatro se mueven entre `text-xs` y `text-base`. La pantalla inventa un escalón de titular que el sistema no tiene |
+| `src/screens/antes.tsx:182` | `border-gray-200 bg-white` | El borde de la barra inferior. Repite el borde de `Card` (`Card.tsx:36` y `Card.tsx:69`) |
+
+Y **11 medidas de hueco y tamaño** elegidas una a una, sin criterio compartido:
+`gap-2`, `gap-3`, `max-w-lg` (L72), `max-w-md` (L99), `min-h-96` (L98 y L174),
+`mt-1` (L85-86), `pb-6` (L152, L174), `px-4 py-3` (L74), `py-4` (L182), `space-y-4` (L105, L174).
+
+`max-w-lg` para la burbuja y `max-w-md` para el estado vacío son dos anchos de lectura
+distintos en la misma pantalla, sin ninguna razón detrás.
+
+### 5.2 Componentes copiados en vez de usados
+
+#### La burbuja de la persona, reimplementada — `src/screens/antes.tsx:73-81`
+
+Las dos mitades de la misma conversación están construidas de dos maneras distintas:
+
+- El mensaje del asistente (L78-80) usa `Card`.
+- El mensaje de la persona (L74-76) es un `<div>` con clases a mano.
+
+El resultado es que una conversación de dos voces tiene una voz dentro del design system
+y la otra fuera. No existe ningún componente de burbuja, así que la mitad que no encajaba
+en `Card` se resolvió copiando el aspecto de `Button primary`.
+
+#### La barra inferior, reimplementada — `src/screens/antes.tsx:181-187`
+
+```
+sticky bottom-0 flex items-end gap-2 border-t border-gray-200 bg-white py-4
+```
+
+`Card` ya sabe dibujar exactamente eso: su prop `footer` es «una franja separada por una
+línea» (`Card.tsx:68-70`, con `border-t border-gray-200 px-5 py-3`). La pantalla lo
+rehace con otro relleno (`py-4` en vez de `py-3`), así que ahora hay dos franjas
+inferiores que se parecen pero no son iguales.
+
+#### El titular, reimplementado — `src/screens/antes.tsx:154`
+
+`Card` tiene su propio titular (`Card.tsx:52`: `text-base font-semibold text-gray-900`).
+La cabecera de la pantalla escribe otro (`text-2xl font-bold text-gray-900`). No hay
+componente de texto ni escala de titulares, así que cada pantalla nueva inventará el
+suyo.
+
+#### Lo que sí se usó bien
+
+`EstadoVacio` (L96-129) es el caso contrario: `Card` con `icon`, `title` y `description`,
+y `Button` dentro. Cuando el componente cubre el caso, la pantalla lo usa. El problema
+aparece justo donde no llega.
+
+### 5.3 Nombres distintos de los de los componentes
+
+Los componentes exponen sus props **en inglés** (`variant`, `size`, `iconLeft`,
+`iconRight`, `label`, `hint`, `error`, `action`, `footer`, `interactive`, `loading`,
+`fullWidth`) y usan nombres **en español** solo en sus constantes internas (`VARIANTES`,
+`TAMANOS`). Esa regla no está escrita en ninguna parte, y la pantalla la rompe en cuanto
+define sus propias piezas:
+
+| Archivo y línea | Nombre usado | Lo que habría en el sistema |
+| --- | --- | --- |
+| `src/screens/antes.tsx:67` | prop `mensaje` | Las props públicas de los cuatro componentes están todas en inglés |
+| `src/screens/antes.tsx:96`, `172` | prop `onElegir` | Ningún componente expone callbacks propios; los existentes son nativos (`onClick`, `onChange`). Un agente escribiría `onSelect` o `onChange` |
+| `src/screens/antes.tsx:67`, `96`, `131` | componentes `Burbuja`, `EstadoVacio`, `Asistente` | `Button`, `Input`, `Card`, `Badge` están en inglés |
+| `src/screens/antes.tsx:11` | `export const titulo` | La convención para registrar una pantalla es en español, mientras que las props de los componentes son en inglés |
+| `src/screens/antes.tsx:15` | `de: 'persona' \| 'asistente'` | Nadie que venga de fuera adivinaría estos valores: la convención del sector es `role: 'user' \| 'assistant'` |
+
+Hoy conviven, por tanto, tres vocabularios: props de componente en inglés, props de
+pantalla en español, e internos en español.
+
+#### Dos nombres del sistema que chirrían al usarlos
+
+| Archivo y línea | Qué pasa |
+| --- | --- |
+| `src/screens/antes.tsx:196` | El botón de enviar es de solo icono, pero la prop se llama `iconLeft`. No hay nada a la izquierda de nada: es el único icono. `Button` no tiene un `icon` a secas (ver 4.1) |
+| `src/screens/antes.tsx:155` | `Badge variant="success"` para decir «Disponible». `success` nombra un resultado («ha ido bien»), no un estado de presencia. Al no haber una variante para eso, se estira la que más se parece |
+
+### 5.4 El patrón
+
+Las tres categorías son la misma historia contada tres veces: **el design system cubre el
+centro de la pantalla y no cubre los bordes.** Donde hay componente, la pantalla lo usa y
+sale limpia. Donde no lo hay —la burbuja, el titular, la barra inferior, el ancho de
+lectura, el nombre de una prop propia— quien escribe decide sobre la marcha, y decide
+distinto cada vez.
+
+Cada pantalla nueva añadirá su propia tanda de valores a mano y su propio vocabulario
+mientras no existan: una capa de tokens con nombre, una escala de titulares, un
+componente de burbuja y una convención de nomenclatura escrita.
