@@ -14,7 +14,7 @@ const preview: Preview = {
     options: {
       // Deja la página de estado arriba del todo, y luego los componentes.
       storySort: {
-        order: ['Estado', 'Componentes'],
+        order: ['Estado', 'Fundamentos', 'Componentes'],
       },
     },
     a11y: {
