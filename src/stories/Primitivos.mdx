@@ -1,0 +1,89 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+import {
+  Colores,
+  Espaciado,
+  Radios,
+  Bordes,
+  Familias,
+  Tamanos,
+  Pesos,
+  Interlineados,
+  Sombras,
+  Breakpoints,
+} from './Primitivos'
+
+{/*
+  Esta página no tiene valores propios a propósito.
+  Todo lo que se ve sale de tokens/tokens.json.
+*/}
+
+<Meta title="Fundamentos/Primitivos" />
+
+# Primitivos
+
+Los primitivos son la capa más básica de los tokens de Faro DS: los valores en bruto,
+sin significado (un gris, un tamaño, un radio). Los componentes **no** los usan
+directamente: más adelante habrá una capa con nombres que dicen su papel
+(`primary`, `surface`, `danger`…) que apuntará a estos valores.
+
+Todo sale de `tokens/tokens.json`, escrito en formato DTCG (el estándar de tokens de
+diseño del W3C). Los valores son los de Tailwind, salvo `color.brand` y la familia
+Inter, que son de la marca Faro.
+
+## Color
+
+Paletas de 50 (más claro) a 950 (más oscuro). Debajo de cada muestra, su número y su
+valor hexadecimal. En el JSON el valor original está en oklch, como en Tailwind.
+
+<Colores />
+
+## Espaciado
+
+Escala numérica: `100` son 4px. Cada barra mide lo que vale el token.
+
+<Espaciado />
+
+## Radios
+
+Misma escala que el espaciado. `full` redondea los extremos por completo.
+
+<Radios />
+
+## Texto
+
+### Familias
+
+<Familias />
+
+### Tamaños
+
+<Tamanos />
+
+### Pesos
+
+<Pesos />
+
+### Interlineados
+
+La altura de cada renglón, en la misma escala que el espaciado (`400` = 16px). Las franjas
+marcan un renglón sí y otro no.
+
+<Interlineados />
+
+## Grosores de borde
+
+<Bordes />
+
+## Sombras
+
+Solo hay piezas, no sombras terminadas: desplazamiento, desenfoque y color. Las muestras
+combinan algunas de ellas para ver el efecto.
+
+<Sombras />
+
+## Breakpoints
+
+Anchos de pantalla a partir de los cuales cambia la disposición. Las barras son
+proporcionales entre sí.
+
+<Breakpoints />
