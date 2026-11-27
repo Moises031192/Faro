@@ -26,7 +26,7 @@ Todo lo que se haga aquí debe servir a esa app: interfaces claras, accesibles y
 
 - Las decisiones del design system viven en `docs/adr/`, cada una en un ADR (registro de decisión: un documento corto que explica qué se decidió, por qué y qué implica).
 - **Léelas antes de proponer cualquier cambio** que afecte al alcance o a los principios del design system.
-- **Nunca se contradicen sin escribir un ADR nuevo.** Si una tarea choca con un ADR, no la hagas a medias: avisa al usuario y propón un ADR nuevo que sustituya o amplíe al anterior. Un ADR aceptado no se edita, salvo que el usuario lo pida de forma expresa; en ese caso se anota la fecha y el motivo en la línea «Revisado» de su cabecera.
+- **Nunca se contradicen sin escribir un ADR nuevo.** Si una tarea choca con un ADR, no la hagas a medias: avisa al usuario y propón un ADR nuevo que sustituya o amplíe al anterior. Un ADR aceptado no se edita.
 - **Cada ADR nuevo se apunta en la lista de abajo en la misma PR** que lo crea.
 
 | ADR | Qué decide | Estado |

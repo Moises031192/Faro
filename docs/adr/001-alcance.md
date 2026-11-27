@@ -2,7 +2,8 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-11-26
-- **Revisado:** 2026-11-27 · los tokens pasan a vivir en `tokens/tokens.json`
+- **Actualizado:** 27 de noviembre de 2026: los tokens pasan a vivir en
+  `tokens/tokens.json` en lugar del bloque `@theme` de `src/index.css`
 - **Autor:** Moisés ([@Moises031192](https://github.com/Moises031192))
 
 > Un ADR (*Architecture Decision Record*, «registro de decisión») es un documento corto
@@ -95,7 +96,7 @@ Ningún componente ni pantalla escribe a mano un color, espaciado, radio, sombra
 de texto, ni tamaño o grosor de icono. Todos salen de un token.
 
 **Dónde viven los tokens:** la única fuente es **`tokens/tokens.json`**, en formato DTCG
-(el estándar del W3C para tokens de diseño). Tiene dos capas:
+(el estándar de design tokens del W3C, que también entiende Figma). Tiene dos capas:
 
 - **primitive**: los valores en bruto, sin significado (`color.gray.500`,
   `spacing.400`). Nadie los usa directamente en un componente ni en una pantalla.
@@ -120,7 +121,7 @@ permitidas, porque leen la escala generada desde los tokens.
   - ningún color escrito como hexadecimal, `rgb()` o `hsl()`;
   - ningún valor entre corchetes (`p-[18px]`, `text-[#333]`);
   - ningún número suelto en las props `size` o `stroke` de un icono de Tabler. Esos
-    valores salen de una constante compartida de tamaños de icono.
+    valores salen de los tokens de icono de `tokens/tokens.json`.
 
 #### 2. Las pantallas solo usan piezas de Faro DS
 
@@ -296,12 +297,13 @@ es la única señal.
 
 ### Siguientes pasos
 
-1. Completar `tokens/tokens.json`: la capa primitive ya existe; falta la capa semántica,
-   con su valor en modo claro y en modo oscuro.
+1. Completar `tokens/tokens.json`: la capa primitive ya existe; faltan la capa
+   semántica, con su valor en modo claro y en modo oscuro, y los tamaños y grosores de
+   icono.
 2. Crear el script que genera `src/styles/tokens.generated.css` a partir del JSON, e
    importarlo desde `src/index.css`.
-3. Pasar los cuatro componentes a tokens, con una constante compartida para los
-   tamaños de icono, y adaptarlos a la tabla de props del principio 4.
+3. Pasar los cuatro componentes a tokens, también los tamaños y grosores de icono, y
+   adaptarlos a la tabla de props del principio 4.
 4. Añadir a Storybook un selector de modo claro y oscuro, para poder hacer las
    comprobaciones del principio 3 en los dos modos.
 5. Crear `Heading`, `Text` y `Link`, y los componentes de la conversación (burbuja de
@@ -312,5 +314,4 @@ es la única señal.
 8. Actualizar el `README.md`, que sigue describiendo un repositorio sin código.
 
 Cualquier cambio de alcance o de principios se hará con un nuevo ADR que sustituya a
-este. Este ADR solo se edita si el usuario lo pide de forma expresa, y entonces se anota
-la fecha y el motivo en la línea «Revisado» de la cabecera.
+este, no editándolo.
