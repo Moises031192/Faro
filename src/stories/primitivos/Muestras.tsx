@@ -42,6 +42,13 @@ const detalleDim = (d: Dimension) =>
 
 /* ---------- Color ---------- */
 
+/** El valor original del color, escrito como en Tailwind: oklch(98.4% 0.0125 180.72). */
+function textoColor(c: Color): string {
+  const [a, b, d] = c.components
+  if (c.colorSpace === 'oklch') return `oklch(${Number((a * 100).toFixed(2))}% ${b} ${d})`
+  return `negro al ${(c.alpha ?? 1) * 100} %`
+}
+
 export function Colores() {
   const paletas = entradas<never>(primitive.color) as unknown as [string, Record<string, Token<Color>>][]
   return (
@@ -54,8 +61,8 @@ export function Colores() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(5.5rem, 1fr))',
-              gap: 8,
+              gridTemplateColumns: 'repeat(auto-fill, minmax(8rem, 1fr))',
+              gap: 12,
             }}
           >
             {entradas<Color>(paleta).map(([paso, token]) => (
@@ -68,8 +75,11 @@ export function Colores() {
                     border: `1px solid ${linea}`,
                   }}
                 />
-                <div style={{ ...etiqueta, marginTop: 4 }}>{paso}</div>
+                <div style={{ ...etiqueta, marginTop: 6, fontWeight: 600 }}>
+                  {nombre}-{paso}
+                </div>
                 <div style={valor}>{token.$value.hex}</div>
+                <div style={valor}>{textoColor(token.$value)}</div>
               </div>
             ))}
           </div>
