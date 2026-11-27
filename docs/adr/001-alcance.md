@@ -2,6 +2,8 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-11-26
+- **Actualizado:** 27 de noviembre de 2026: los tokens pasan a vivir en
+  `tokens/tokens.json` en lugar del bloque `@theme` de `src/index.css`
 - **Autor:** Moisés ([@Moises031192](https://github.com/Moises031192))
 
 > Un ADR (*Architecture Decision Record*, «registro de decisión») es un documento corto
@@ -62,7 +64,8 @@ no haya reglas escritas. Este ADR fija esas reglas.
 - **Modo claro y modo oscuro** desde el principio: cada token tiene un valor para cada
   modo.
 - **Componentes propios**, escritos desde cero en React y TypeScript.
-- **Tailwind** para los estilos, con los tokens definidos en su bloque `@theme`.
+- **Tailwind** para los estilos. Los tokens se definen en `tokens/tokens.json` y de ahí
+  se genera el CSS que lee Tailwind.
 - **Tabler Icons** como única fuente de iconos.
 - **Componentes de salud y de datos**: medicación, análisis, citas, notas, conversación
   con el agente, objetivos de revisión y el panel de métricas.
@@ -90,19 +93,35 @@ Storybook**. Así una PR se puede aceptar o corregir sin discutir interpretacion
 #### 1. Todo valor visual sale de un token
 
 Ningún componente ni pantalla escribe a mano un color, espaciado, radio, sombra, tamaño
-de texto, ni tamaño o grosor de icono. Los valores se definen solo en el bloque `@theme`
-de `src/index.css`, con nombres que dicen su papel (`primary`, `danger`, `surface`,
-`text-muted`) y no su color (`teal-600`). Las clases de escala de Tailwind (`gap-4`,
-`rounded-lg`, `text-sm`) están permitidas, porque leen la escala definida en `@theme`.
+de texto, ni tamaño o grosor de icono. Todos salen de un token.
 
-**Cómo se comprueba (revisando el código).** En `src/`, salvo `src/index.css`, no aparece:
+**Dónde viven los tokens:** la única fuente es **`tokens/tokens.json`**, en formato DTCG
+(el estándar de design tokens del W3C, que también entiende Figma). Tiene dos capas:
 
-- ninguna clase con un color de la paleta de Tailwind (`teal-600`, `gray-200`, `red-50`…),
-  ni `white` ni `black`;
-- ningún color escrito como hexadecimal, `rgb()` o `hsl()`;
-- ningún valor entre corchetes (`p-[18px]`, `text-[#333]`);
-- ningún número suelto en las props `size` o `stroke` de un icono de Tabler. Esos valores
-  salen de una constante compartida de tamaños de icono.
+- **primitive**: los valores en bruto, sin significado (`color.gray.500`,
+  `spacing.400`). Nadie los usa directamente en un componente ni en una pantalla.
+- **semántica**: nombres que dicen su papel (`primary`, `danger`, `surface`,
+  `text-muted`), cada uno con su valor en modo claro y en modo oscuro, que apuntan a un
+  primitivo. Es la capa que usan los componentes.
+
+Tailwind no lee JSON, así que un script genera a partir de `tokens/tokens.json` el CSS
+que lee Tailwind (`src/styles/tokens.generated.css`, que importa `src/index.css`). Ese
+CSS **no se edita a mano**: para cambiar un valor se cambia el JSON y se vuelve a
+generar. Las clases de escala de Tailwind (`gap-4`, `rounded-lg`, `text-sm`) están
+permitidas, porque leen la escala generada desde los tokens.
+
+**Cómo se comprueba (revisando el código):**
+
+- Al volver a generar el CSS desde `tokens/tokens.json`, el archivo generado no cambia:
+  nadie lo ha tocado a mano y está al día.
+- `src/index.css` no define ningún valor propio: solo importa Tailwind y el CSS generado.
+- En el resto de `src/` no aparece:
+  - ninguna clase con un color de la paleta de Tailwind (`teal-600`, `gray-200`,
+    `red-50`…), ni `white` ni `black`;
+  - ningún color escrito como hexadecimal, `rgb()` o `hsl()`;
+  - ningún valor entre corchetes (`p-[18px]`, `text-[#333]`);
+  - ningún número suelto en las props `size` o `stroke` de un icono de Tabler. Esos
+    valores salen de los tokens de icono de `tokens/tokens.json`.
 
 #### 2. Las pantallas solo usan piezas de Faro DS
 
@@ -236,7 +255,7 @@ es la única señal.
 
 | Principio | Qué se comprueba | Dónde |
 | --- | --- | --- |
-| 1. Todo valor visual sale de un token | No hay colores de la paleta, `white`/`black`, hexadecimales, valores entre corchetes ni números sueltos en los iconos fuera de `src/index.css` | Revisando el código |
+| 1. Todo valor visual sale de un token | Los valores solo están en `tokens/tokens.json`; el CSS generado está al día y nadie lo ha tocado; en `src/` no hay colores de la paleta, `white`/`black`, hexadecimales, valores entre corchetes ni números sueltos en los iconos | Revisando el código |
 | 2. Las pantallas solo usan piezas de Faro DS | En `src/screens/` solo hay imports de Faro DS, React, Tabler y `src/lib/`; solo elementos de HTML para agrupar; nada de texto suelto ni iconos dibujados directamente; solo clases de colocación y ningún `style` | Revisando el código |
 | 3. Accesible por defecto | Panel de accesibilidad sin infracciones, recorrido con teclado, foco solo con teclado y zonas de 24 × 24 px, en modo claro y oscuro | Mirándolo en Storybook (y `aria-label` obligatorio, revisando el código) |
 | 4. Un mismo concepto, un mismo nombre | Las props de cada componente coinciden en nombre, valores y valor por defecto con la tabla del principio | Revisando el código |
@@ -278,18 +297,21 @@ es la única señal.
 
 ### Siguientes pasos
 
-1. Crear la capa de tokens en `src/index.css` (color con modo claro y oscuro,
-   espaciado, radios, sombras, tipografía y tamaños de icono).
-2. Pasar los cuatro componentes a tokens, con una constante compartida para los
-   tamaños de icono, y adaptarlos a la tabla de props del principio 4.
-3. Añadir a Storybook un selector de modo claro y oscuro, para poder hacer las
+1. Completar `tokens/tokens.json`: la capa primitive ya existe; faltan la capa
+   semántica, con su valor en modo claro y en modo oscuro, y los tamaños y grosores de
+   icono.
+2. Crear el script que genera `src/styles/tokens.generated.css` a partir del JSON, e
+   importarlo desde `src/index.css`.
+3. Pasar los cuatro componentes a tokens, también los tamaños y grosores de icono, y
+   adaptarlos a la tabla de props del principio 4.
+4. Añadir a Storybook un selector de modo claro y oscuro, para poder hacer las
    comprobaciones del principio 3 en los dos modos.
-4. Crear `Heading`, `Text` y `Link`, y los componentes de la conversación (burbuja de
+5. Crear `Heading`, `Text` y `Link`, y los componentes de la conversación (burbuja de
    mensaje y barra para escribir), con sus historias y su fila en
    `docs/componentes.md`.
-5. Rehacer `src/screens/antes.tsx` con ellos, cumpliendo los cinco principios.
-6. Añadir a `docs/componentes.md` las columnas que reflejen estos principios.
-7. Actualizar el `README.md`, que sigue describiendo un repositorio sin código.
+6. Rehacer `src/screens/antes.tsx` con ellos, cumpliendo los cinco principios.
+7. Añadir a `docs/componentes.md` las columnas que reflejen estos principios.
+8. Actualizar el `README.md`, que sigue describiendo un repositorio sin código.
 
 Cualquier cambio de alcance o de principios se hará con un nuevo ADR que sustituya a
 este, no editándolo.
