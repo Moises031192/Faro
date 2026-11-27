@@ -1,54 +1,17 @@
-// Lee tokens/tokens.json tal cual y pinta cada grupo de primitivos.
-// Ningún valor se copia aquí: si cambia el JSON, cambia la página.
+// Dibuja cada grupo de primitivos. Los datos salen de ./tokens.ts, que lee tokens/tokens.json:
+// ningún valor se copia aquí, así que si cambia el JSON, cambia la página.
 import type { CSSProperties, ReactNode } from 'react'
-import tokens from '../../tokens/tokens.json'
-
-type Dimension = { value: number; unit: 'px' | 'rem' }
-type Color = {
-  colorSpace: 'oklch' | 'srgb'
-  components: [number, number, number]
-  alpha?: number
-  hex: string
-}
-type Token<T> = { $value: T; $description?: string }
-
-const esNumero = (clave: string) => /^\d+$/.test(clave)
-
-/**
- * Las entradas de un grupo, sin las claves que empiezan por $ ($type, $description).
- * JavaScript pone las claves como «100» delante de «050», así que se reordenan:
- * primero las numéricas de menor a mayor y después el resto (full, xs, sm…) en su orden.
- */
-function entradas<T>(grupo: object): [string, Token<T>][] {
-  const lista = Object.entries(grupo).filter(([clave]) => !clave.startsWith('$')) as [
-    string,
-    Token<T>,
-  ][]
-  return lista.sort(([a], [b]) => {
-    if (esNumero(a) && esNumero(b)) return Number(a) - Number(b)
-    return Number(esNumero(b)) - Number(esNumero(a))
-  })
-}
-
-const css = {
-  color(c: Color): string {
-    const [a, b, d] = c.components
-    if (c.colorSpace === 'oklch') return `oklch(${a} ${b} ${d})`
-    return `rgb(${a * 255} ${b * 255} ${d * 255} / ${c.alpha ?? 1})`
-  },
-  dim: (d: Dimension) => `${d.value}${d.unit}`,
-  px: (d: Dimension) => (d.unit === 'rem' ? d.value * 16 : d.value),
-}
+import { css, entradas, primitive, type Color, type Dimension, type Token } from './tokens'
 
 // El marco de la página también sale de los tokens.
-const gris = tokens.color.gray as unknown as Record<string, Token<Color>>
+const gris = primitive.color.gray as unknown as Record<string, Token<Color>>
 const tinta = css.color(gris['900'].$value)
 const tintaSuave = css.color(gris['500'].$value)
 const linea = css.color(gris['200'].$value)
 const fondo = css.color(gris['50'].$value)
-const acento = css.color((tokens.color.brand as unknown as Record<string, Token<Color>>)['500'].$value)
-const mono = (tokens['font-family'].mono.$value as string[]).join(', ')
-const sans = (tokens['font-family'].sans.$value as string[])
+const acento = css.color((primitive.color.brand as unknown as Record<string, Token<Color>>)['500'].$value)
+const mono = (primitive['font-family'].mono.$value as string[]).join(', ')
+const sans = (primitive['font-family'].sans.$value as string[])
   .map((f) => (f.includes(' ') ? `'${f}'` : f))
   .join(', ')
 
@@ -80,7 +43,7 @@ const detalleDim = (d: Dimension) =>
 /* ---------- Color ---------- */
 
 export function Colores() {
-  const paletas = entradas<never>(tokens.color) as unknown as [string, Record<string, Token<Color>>][]
+  const paletas = entradas<never>(primitive.color) as unknown as [string, Record<string, Token<Color>>][]
   return (
     <div style={{ display: 'grid', gap: 24 }}>
       {paletas.map(([nombre, paleta]) => (
@@ -121,7 +84,7 @@ export function Colores() {
 export function Espaciado() {
   return (
     <div>
-      {entradas<Dimension>(tokens.spacing).map(([nombre, t]) => (
+      {entradas<Dimension>(primitive.spacing).map(([nombre, t]) => (
         <Fila key={nombre} nombre={`spacing.${nombre}`} detalle={detalleDim(t.$value)}>
           <div style={{ height: 16, width: css.dim(t.$value), background: acento, borderRadius: 2 }} />
         </Fila>
@@ -135,7 +98,7 @@ export function Espaciado() {
 export function Radios() {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-      {entradas<Dimension>(tokens.radius).map(([nombre, t]) => (
+      {entradas<Dimension>(primitive.radius).map(([nombre, t]) => (
         <div key={nombre} style={{ width: 96 }}>
           <div
             style={{
@@ -158,7 +121,7 @@ export function Radios() {
 export function Bordes() {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-      {entradas<Dimension>(tokens['border-width']).map(([nombre, t]) => (
+      {entradas<Dimension>(primitive['border-width']).map(([nombre, t]) => (
         <div key={nombre} style={{ width: 120 }}>
           <div
             style={{
@@ -183,7 +146,7 @@ const ejemplo = 'Tu próxima cita es el martes a las 10:30'
 export function Familias() {
   return (
     <div>
-      {entradas<string[]>(tokens['font-family']).map(([nombre, t]) => (
+      {entradas<string[]>(primitive['font-family']).map(([nombre, t]) => (
         <Fila key={nombre} nombre={`font-family.${nombre}`} detalle={t.$value[0]}>
           <span
             style={{
@@ -203,7 +166,7 @@ export function Familias() {
 export function Tamanos() {
   return (
     <div>
-      {entradas<Dimension>(tokens['font-size']).map(([nombre, t]) => (
+      {entradas<Dimension>(primitive['font-size']).map(([nombre, t]) => (
         <Fila key={nombre} nombre={`font-size.${nombre}`} detalle={detalleDim(t.$value)}>
           <span style={{ fontFamily: sans, fontSize: css.dim(t.$value), color: tinta, lineHeight: 1.2 }}>
             {ejemplo}
@@ -217,7 +180,7 @@ export function Tamanos() {
 export function Pesos() {
   return (
     <div>
-      {entradas<number>(tokens['font-weight']).map(([nombre, t]) => (
+      {entradas<number>(primitive['font-weight']).map(([nombre, t]) => (
         <Fila key={nombre} nombre={`font-weight.${nombre}`} detalle={String(t.$value)}>
           <span style={{ fontFamily: sans, fontSize: 20, fontWeight: t.$value, color: tinta }}>
             {ejemplo}
@@ -231,7 +194,7 @@ export function Pesos() {
 export function Interlineados() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(14rem, 1fr))', gap: 16 }}>
-      {entradas<Dimension>(tokens['line-height']).map(([nombre, t]) => (
+      {entradas<Dimension>(primitive['line-height']).map(([nombre, t]) => (
         <div key={nombre}>
           <div style={etiqueta}>line-height.{nombre}</div>
           <div style={{ ...valor, marginBottom: 4 }}>{detalleDim(t.$value)}</div>
@@ -257,7 +220,7 @@ export function Interlineados() {
 /* ---------- Sombras ---------- */
 
 export function Sombras() {
-  const { offset, blur, color } = tokens.shadow
+  const { offset, blur, color } = primitive.shadow
   const desplazamientos = entradas<Dimension>(offset)
   const desenfoques = entradas<Dimension>(blur)
   const colores = entradas<Color>(color)
@@ -309,7 +272,7 @@ export function Sombras() {
 /* ---------- Breakpoints ---------- */
 
 export function Breakpoints() {
-  const lista = entradas<Dimension>(tokens.breakpoint)
+  const lista = entradas<Dimension>(primitive.breakpoint)
   const maximo = Math.max(...lista.map(([, t]) => css.px(t.$value)))
   return (
     <div>
